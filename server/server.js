@@ -14,6 +14,9 @@ var app = express();
 //middleware(bodyParser takes Json data and returns function(Javascript object data))
 app.use(bodyParser.json());
 
+//400: Bad request
+//404: Not found
+
 //Create a resource(new todo)
 app.post('/todos', (req, res) => {
 	//console.log(req.body);
@@ -39,6 +42,8 @@ app.get('/todos', (req, res) => {
 	});
 });
 
+
+//Query to get todo by id
 app.get('/todos/:id', (req, res) => {
 	//res.send(req.params);
 	var id = req.params.id;
@@ -47,14 +52,34 @@ app.get('/todos/:id', (req, res) => {
 		return res.status(404).send();
 	}
 	
-Todo.findById(id).then((todo) => {
+  Todo.findById(id).then((todo) => {
 		if(!todo) {
-			return res.status(400).send();
+			return res.status(404).send();
 		}
 		res.send(JSON.stringify({todo}, undefined, 2));
 	}).catch((e) => {
-		res.status(404).send();
+		res.status(400).send();
 	});
+});
+
+//delete todo by id
+app.delete('/todos/:id', (req, res) => {
+	
+	var id = req.params.id;
+	
+	if(!ObjectId.isValid(id)) {
+		return res.status(404).send();
+	}
+	
+	Todo.findByIdAndRemove(id).then((todo) => {
+		if(!todo) {
+			return res.status(404).send();
+		}
+		res.send({todo});
+	}).catch((e) => {
+		res.status(400).send();
+	});
+	
 });
 
 //Server setup(Listen to port)
