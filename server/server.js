@@ -8,6 +8,7 @@ const {ObjectId} = require('mongodb');
 var {mongoose} = require('./db/mongoose');
 var {Todo}     = require('./models/todo');
 var {User}     = require('./models/user');
+var {authenticate}     = require('./middleware/authenticate');
 
 //Server setup(include express in our application)
 var app = express();
@@ -17,6 +18,7 @@ app.use(bodyParser.json());
 
 //400: Bad request
 //404: Not found
+//401: Unauthorized access
 
 //Create a resource(new todo)
 app.post('/todos', (req, res) => {
@@ -111,17 +113,23 @@ app.patch('/todos/:id', (req, res) => {
 //Create a resource(new User)
 app.post('/users', (req, res) => {
 	var body = _.pick(req.body, ['email', 'password']);
-	console.log(body);
 	var user = new User(body);
 	
 	user.save().then((user) => {
 		//res.send({user});
 		return user.generateAuthToken();
 	}).then((token) => {
-		res.header('x-auth', token).send(user);//x-auth is used to indicate custom header,not default.http                                           header
+		res.header('x-auth', token).send(user);//x-auth is used to indicate custom header,not default.http                                           header,res.header -> set a headervalue
 	}).catch((e) => {
 		res.status(400).send(e);
 	});
+});
+
+
+
+//Private route 
+app.get('/users/me', authenticate, (req, res) => {
+	res.send(req.user);
 });
 
 //Server setup(Listen to port)

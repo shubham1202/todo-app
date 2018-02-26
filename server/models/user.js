@@ -34,7 +34,7 @@ var UserSchema = new mongoose.Schema({
 	
 },{usePushEach: true});
  
-//Methods used to override the default Schema
+//Methods used to override the default Schema(here we pick only id, email to show nd ignore psw,token values )
 UserSchema.methods.toJSON = function() {
 	var user = this;
 	var userObject = user.toObject();
@@ -50,12 +50,31 @@ UserSchema.methods.generateAuthToken = function() {
 	var token  = jwt.sign({_id: user._id.toHexString(), access}, 'abc123').toString(); //returns object so                                                                                      used .toString()
                                                                                  //toHexString:coneverts
                                                                                  //ObjectId to string
-  user.tokens.push({access: access, token: token});    //tokens is an empty array, so can use regular array methods
+  user.tokens.push({access: access, token: token});    //tokens is an empty array, so can use regular                                                          array methods
  
   return user.save().then(() => {       //return token value as a success case to be used in server.js
 		return token;                       // to chained then() call, generally we return a promise to 
 	});                                   // chained then() see promise-2.js example for reference
-}                                                                                    				                                                                                              
+}
+
+UserSchema.statics.findByToken = function(token) {
+	var User = this;
+	var decoded;
+	//try-catch is used because jwt.verify throws error so we need to catch it if we use wrong secret key/token value is manipulated
+	try{
+		decoded = jwt.verify(token, 'abc123');
+	} catch (e) {
+		return Promise.reject();
+	}
+	
+	//Promise is returned
+	return User.findOne({  //Querying nested object properties,we use quotes because we use nested  object                         properties 
+		'_id': decoded._id,                
+		'tokens.token': token,
+		'tokens.access': 'auth'
+	});
+}
+
 //User model
 var User = mongoose.model('User', UserSchema);
 
