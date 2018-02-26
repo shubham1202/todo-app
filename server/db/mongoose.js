@@ -4,6 +4,6 @@
 mongoose.Promise = global.Promise;
 
 //Connect mongoose to mongodb database server
-mongoose.connect('mongodb://localhost:27017/TodoApp');
+mongoose.connect('mongodb://localhost:27017/TodoApp', {useMongoClient: true });
 
 module.exports = {mongoose};

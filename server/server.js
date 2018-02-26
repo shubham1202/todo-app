@@ -85,14 +85,14 @@ app.delete('/todos/:id', (req, res) => {
 
 app.patch('/todos/:id', (req, res) => {
 	var id   = req.params.id;
-	var body = _.pick(req.body, ['text', 'completed']); 
+	var body = _.pick(req.body, ['text', 'completed']); //To select which properties to update
 	
 	if(!ObjectId.isValid(id)) {
 		return res.status(404).send();
 	}
 	
 	if(_.isBoolean(body.completed) && body.completed) {
-		body.completedAt = new Date().getTime(); 
+		body.completedAt = new Date().getTime();           //body.completedAt will be created when we need 
 	} else {
 		body.completed   = false;
 		body.completedAt = null;
@@ -105,7 +105,23 @@ app.patch('/todos/:id', (req, res) => {
 		res.send({todo});
 	}).catch((e) => {
 		res.status(400).send();
-	})	  
+	});	  
+});
+
+//Create a resource(new User)
+app.post('/users', (req, res) => {
+	var body = _.pick(req.body, ['email', 'password']);
+	console.log(body);
+	var user = new User(body);
+	
+	user.save().then((user) => {
+		//res.send({user});
+		return user.generateAuthToken();
+	}).then((token) => {
+		res.header('x-auth', token).send(user);//x-auth is used to indicate custom header,not default.http                                           header
+	}).catch((e) => {
+		res.status(400).send(e);
+	});
 });
 
 //Server setup(Listen to port)
